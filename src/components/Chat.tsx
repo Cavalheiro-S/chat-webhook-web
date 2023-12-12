@@ -1,26 +1,30 @@
+"use client"
+
+import { useSocket } from "@/hooks/useSocket"
 import { SendOutlined } from "@ant-design/icons"
 import { Card, Input } from "antd"
 
 export const Chat = () => {
-
+    const { socket } = useSocket()
 
     const messages = [
         {
+            id: 1,
             text: "Mussum Ipsum, cacilds vidis litro abertis.  Atirei o pau no gatis, per gatis num morreus. Nulla id gravida magna, ut semper sapien. Delegadis gente finis, bibendum egestas augue arcu ut est. Suco de cevadiss deixa as pessoas mais interessantis.",
             time: "10:00",
             user: 1
         },
         {
+            id: 2,
             text: "Mensagem 1",
             time: "10:00",
             user: 2
         }
     ]
-    const renderMessage = (message: { text: string, time: string, user: number }) => {
+    const renderMessage = (message: { text: string, time: string, user: number, id: number }) => {
         return (
-            <div className={`flex justify-between items-center gap-4 max-w-[70%] ${message.user === 1 ? "self-start" : "self-end"}`}>
+            <div key={message.id} className={`flex justify-between items-center gap-4 max-w-[70%] ${message.user === 1 ? "self-start" : "self-end"}`}>
                 <span
-                    key={message.text + message.time}
                     className={`${message.user === 1 ? "bg-blue-200" : "bg-red-200"} p-4 rounded`}>
                     {message.text}
                 </span>
@@ -34,7 +38,11 @@ export const Chat = () => {
             <div className="flex flex-col py-4 gap-2">
                 {messages.map(renderMessage)}
             </div>
-            <Input size="large" placeholder="Digite uma mensagem" addonAfter={<SendOutlined className="hover:text-blue-600 hover:cursor-pointer" />} />
+            <Input
+                size="large"
+                placeholder="Digite uma mensagem"
+                onClick={() => socket.emit("message", { text: "teste" })}
+                addonAfter={<SendOutlined className="hover:text-blue-600 hover:cursor-pointer" />} />
         </Card>
     )
 }
