@@ -41,8 +41,7 @@ export const Chat = () => {
             <Input
                 size="large"
                 placeholder="Digite uma mensagem"
-                onClick={() => socket.emit("message", { text: "teste" })}
-                addonAfter={<SendOutlined className="hover:text-blue-600 hover:cursor-pointer" />} />
+                addonAfter={<SendOutlined onClick={() => socket.emit("chat message", { text: "teste" })} className="hover:text-blue-600 hover:cursor-pointer" />} />
         </Card>
     )
 }
