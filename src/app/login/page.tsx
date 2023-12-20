@@ -1,8 +1,10 @@
 "use client"
 
+import { UserContext } from "@/context/user-context";
 import { api } from "@/service/api";
 import { Button, Card, Form, Input, Typography } from "antd";
 import { useRouter } from "next/navigation";
+import { useContext } from "react";
 
 type FieldType = {
     username: string
@@ -11,10 +13,13 @@ type FieldType = {
 
 export default function Page() {
     const router = useRouter()
+    const { setUser } = useContext(UserContext)
     const handleSubmit = async (email: string, password: string) => {
-        const response = await api.post("/auth/login", { email, password })
-        if(response.status === 200)
+        const response = await api.post<User>("/auth/login", { email, password })
+        if (response.status === 200) {
+            setUser(response.data)
             router.push("/")
+        }
     }
     return (
         <Card className="m-auto">
