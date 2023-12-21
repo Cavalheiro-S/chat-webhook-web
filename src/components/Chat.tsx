@@ -1,31 +1,40 @@
 "use client"
 
+import { UserContext } from "@/context/user-context"
 import { useSocket } from "@/hooks/useSocket"
 import { SendOutlined } from "@ant-design/icons"
 import { Card, Input } from "antd"
+import { useContext, useEffect, useState } from "react"
 
-export const Chat = () => {
+type Message = {
+    text: string
+    time: string
+    userId: string
+}
+
+export const Chat = ({ chatId }: { chatId: string }) => {
     const { socket } = useSocket()
+    const { user } = useContext(UserContext)
+    const [messages, setMessages] = useState<Message[]>([])
+    const [messageInput, setMessageInput] = useState("")
 
-    const messages = [
-        {
-            id: 1,
-            text: "Mussum Ipsum, cacilds vidis litro abertis.  Atirei o pau no gatis, per gatis num morreus. Nulla id gravida magna, ut semper sapien. Delegadis gente finis, bibendum egestas augue arcu ut est. Suco de cevadiss deixa as pessoas mais interessantis.",
-            time: "10:00",
-            user: 1
-        },
-        {
-            id: 2,
-            text: "Mensagem 1",
-            time: "10:00",
-            user: 2
+    useEffect(() => {
+
+        if (user?.id) {
+            socket.emit("join", user?.id)
+            socket.on("chat-" + chatId, (message) => {
+                console.log(message);
+                // setMessages(prev => [...prev, { text: message.text, userId: message.id, time: new Date().toLocaleTimeString() }])
+            })
+
         }
-    ]
-    const renderMessage = (message: { text: string, time: string, user: number, id: number }) => {
+
+    }, [user])
+    const renderMessage = (message: Message) => {
         return (
-            <div key={message.id} className={`flex justify-between items-center gap-4 max-w-[70%] ${message.user === 1 ? "self-start" : "self-end"}`}>
+            <div key={message.userId + message.time} className={`flex justify-between items-center gap-4 max-w-[70%] ${message.userId === user?.id ? "self-start" : "self-end"}`}>
                 <span
-                    className={`${message.user === 1 ? "bg-blue-200" : "bg-red-200"} p-4 rounded`}>
+                    className={`${message.userId === user?.id ? "bg-blue-200" : "bg-red-200"} p-4 rounded`}>
                     {message.text}
                 </span>
                 <span className="text-xs text-gray-500 self-end">{message.time}</span>
@@ -41,7 +50,12 @@ export const Chat = () => {
             <Input
                 size="large"
                 placeholder="Digite uma mensagem"
-                addonAfter={<SendOutlined onClick={() => socket.emit("chat message", { text: "teste" })} className="hover:text-blue-600 hover:cursor-pointer" />} />
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                addonAfter={
+                    <SendOutlined
+                        onClick={() => socket.emit("chat message", { message: messageInput, userId: user?.id })}
+                        className="hover:text-blue-600 hover:cursor-pointer" />} />
         </Card>
     )
 }

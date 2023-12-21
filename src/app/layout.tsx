@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/providers';
+import { Menu } from 'antd';
+import { SideMenu } from '@/components/SideMenu';
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -19,7 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className + " flex min-h-screen"}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <SideMenu />
+          {children}
+        </Providers>
       </body>
     </html>
   )

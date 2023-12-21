@@ -17,6 +17,7 @@ export default function Page() {
     const handleSubmit = async (email: string, password: string) => {
         const response = await api.post<User>("/auth/login", { email, password })
         if (response.status === 200) {
+            window.sessionStorage.setItem("user", JSON.stringify(response.data))
             setUser(response.data)
             router.push("/")
         }
