@@ -26,6 +26,11 @@ export const SideMenu = () => {
 
     const friendList: MenuProps["items"] = [
         {
+            label: "Logado como: " + user?.name,
+            key: "user",
+            type: "group",
+        },
+        {
             label: 'Amigos',
             key: "friendsList",
             children: friends.map(friend => ({

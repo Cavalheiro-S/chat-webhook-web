@@ -2,13 +2,14 @@
 
 import { UserContext } from "@/context/user-context"
 import { useSocket } from "@/hooks/useSocket"
+import { api } from "@/service/api"
 import { SendOutlined } from "@ant-design/icons"
 import { Card, Input } from "antd"
 import { useContext, useEffect, useState } from "react"
 
 type Message = {
     text: string
-    time: string
+    createdAt: string
     userId: string
 }
 
@@ -18,26 +19,31 @@ export const Chat = ({ chatId }: { chatId: string }) => {
     const [messages, setMessages] = useState<Message[]>([])
     const [messageInput, setMessageInput] = useState("")
 
+    const getPreviousMessages = async () => {
+        if (!user) return;
+        const messages = await api.get("/chat/messages/" + user.id)
+        setMessages(messages.data)
+    }
     useEffect(() => {
 
         if (user?.id) {
-            socket.emit("join", user?.id)
-            socket.on("chat-" + chatId, (message) => {
+            getPreviousMessages()
+            socket.emit("join-room", user.id)
+            socket.on("receive-message", message => {
                 console.log(message);
-                // setMessages(prev => [...prev, { text: message.text, userId: message.id, time: new Date().toLocaleTimeString() }])
+                setMessages(prev => [...prev, message])
             })
-
         }
 
     }, [user])
     const renderMessage = (message: Message) => {
         return (
-            <div key={message.userId + message.time} className={`flex justify-between items-center gap-4 max-w-[70%] ${message.userId === user?.id ? "self-start" : "self-end"}`}>
+            <div key={message.userId + message.createdAt} className={`flex justify-between items-center gap-4 max-w-[70%] ${message.userId === user?.id ? "self-end" : "self-start"}`}>
                 <span
                     className={`${message.userId === user?.id ? "bg-blue-200" : "bg-red-200"} p-4 rounded`}>
                     {message.text}
                 </span>
-                <span className="text-xs text-gray-500 self-end">{message.time}</span>
+                <span className="text-xs text-gray-500 self-end">{new Date(message.createdAt).toLocaleTimeString()}</span>
             </div>
         )
     }
@@ -54,7 +60,7 @@ export const Chat = ({ chatId }: { chatId: string }) => {
                 onChange={(e) => setMessageInput(e.target.value)}
                 addonAfter={
                     <SendOutlined
-                        onClick={() => socket.emit("chat message", { message: messageInput, userId: user?.id })}
+                        onClick={() => socket.emit("send-message", { message: messageInput, room: chatId, userId: user?.id })}
                         className="hover:text-blue-600 hover:cursor-pointer" />} />
         </Card>
     )
