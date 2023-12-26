@@ -13,22 +13,19 @@ type Message = {
     userId: string
 }
 
-export const Chat = ({ chatId }: { chatId: string }) => {
+export const Chat = ({ friendId }: { friendId: string }) => {
     const { socket } = useSocket()
     const { user } = useContext(UserContext)
     const [messages, setMessages] = useState<Message[]>([])
     const [messageInput, setMessageInput] = useState("")
 
-    const getPreviousMessages = async () => {
-        if (!user) return;
-        const messages = await api.get("/chat/messages/" + user.id)
-        setMessages(messages.data)
-    }
     useEffect(() => {
 
         if (user?.id) {
-            getPreviousMessages()
-            socket.emit("join-room", user.id)
+            socket.emit("join-room", {userOneId: user.id, userTwoId: friendId})
+            socket.on("previous-messages", (messages) => {
+                setMessages(messages)
+            })
             socket.on("receive-message", message => {
                 console.log(message);
                 setMessages(prev => [...prev, message])
@@ -60,7 +57,7 @@ export const Chat = ({ chatId }: { chatId: string }) => {
                 onChange={(e) => setMessageInput(e.target.value)}
                 addonAfter={
                     <SendOutlined
-                        onClick={() => socket.emit("send-message", { message: messageInput, room: chatId, userId: user?.id })}
+                        onClick={() => socket.emit("send-message", { message: messageInput, userOneId: user?.id, friendId })}
                         className="hover:text-blue-600 hover:cursor-pointer" />} />
         </Card>
     )

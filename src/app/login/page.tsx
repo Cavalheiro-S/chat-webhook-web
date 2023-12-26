@@ -4,7 +4,7 @@ import { UserContext } from "@/context/user-context";
 import { api } from "@/service/api";
 import { Button, Card, Form, Input, Typography } from "antd";
 import { useRouter } from "next/navigation";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 
 type FieldType = {
     username: string
@@ -14,6 +14,12 @@ type FieldType = {
 export default function Page() {
     const router = useRouter()
     const { setUser } = useContext(UserContext)
+
+    useEffect(() => {
+        const user = window.sessionStorage.getItem("user")
+        user && router.push("/")
+    },[])
+
     const handleSubmit = async (email: string, password: string) => {
         const response = await api.post<User>("/auth/login", { email, password })
         if (response.status === 200) {

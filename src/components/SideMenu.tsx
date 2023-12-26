@@ -1,6 +1,7 @@
 'use client'
 
 import { UserContext } from "@/context/user-context"
+import { useSocket } from "@/hooks/useSocket"
 import { api } from "@/service/api"
 import { Menu, MenuProps } from "antd"
 import { useRouter } from "next/navigation"
@@ -12,8 +13,10 @@ type Friend = User & {
 
 export const SideMenu = () => {
     const [friends, setFriends] = useState<Friend[]>([])
+    const { socket } = useSocket()
     const { user } = useContext(UserContext)
     const router = useRouter()
+
     const loadFriendList = useCallback(async () => {
         const response = await api.get<Friend[]>(`/friend/all/${user?.id}`)
         if (response.status === 200)
@@ -23,6 +26,10 @@ export const SideMenu = () => {
     useEffect(() => {
         user?.id && loadFriendList()
     }, [user])
+
+    const handleMenuItemClick = (id: string) => {
+        router.push(`/chat/${id}`)
+    }
 
     const friendList: MenuProps["items"] = [
         {
@@ -36,9 +43,7 @@ export const SideMenu = () => {
             children: friends.map(friend => ({
                 label: friend.name,
                 key: friend.id,
-                onClick: () => {
-                    router.push(`/chat/${friend.chatId}`)
-                },
+                onClick: () => { handleMenuItemClick(friend.id) },
             }))
         }
     ]

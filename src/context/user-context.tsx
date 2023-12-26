@@ -13,9 +13,13 @@ export const UserContextProvider = ({ children }: { children: React.ReactNode })
     const router = useRouter()
 
     useEffect(() => {
-        if (!user)
+        const userJson = window.sessionStorage.getItem("user")
+        if (userJson)
+            setUser(JSON.parse(userJson))
+        else 
             router.push("/login")
-    }, [user])
+    }, [])
+
     const value = {
         user,
         setUser
