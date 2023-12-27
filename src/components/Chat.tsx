@@ -2,12 +2,12 @@
 
 import { UserContext } from "@/context/user-context"
 import { useSocket } from "@/hooks/useSocket"
-import { api } from "@/service/api"
 import { SendOutlined } from "@ant-design/icons"
 import { Card, Input } from "antd"
-import { useContext, useEffect, useState } from "react"
+import { useCallback, useContext, useEffect, useState } from "react"
 
 type Message = {
+    id: string
     text: string
     createdAt: string
     userId: string
@@ -19,10 +19,9 @@ export const Chat = ({ friendId }: { friendId: string }) => {
     const [messages, setMessages] = useState<Message[]>([])
     const [messageInput, setMessageInput] = useState("")
 
-    useEffect(() => {
-
+    const handleMessages = useCallback(async () => {
         if (user?.id) {
-            socket.emit("join-room", {userOneId: user.id, userTwoId: friendId})
+            socket.emit("join-room", { userOneId: user.id, userTwoId: friendId })
             socket.on("previous-messages", (messages) => {
                 setMessages(messages)
             })
@@ -31,11 +30,26 @@ export const Chat = ({ friendId }: { friendId: string }) => {
                 setMessages(prev => [...prev, message])
             })
         }
+    }, [user, socket, friendId])
 
-    }, [user])
+    useEffect(() => {
+        handleMessages()
+        return () => {
+            socket.emit("leave-room", { userOneId: user?.id, userTwoId: friendId })
+            socket.removeAllListeners("receive-message")
+            socket.removeAllListeners("previous-messages")
+        }
+    }, [])
+
+    const handleSendMessage = () => {
+        if (user?.id) {
+            socket.emit("send-message", { message: messageInput, userOneId: user?.id, friendId })
+            setMessageInput("")
+        }
+    }
     const renderMessage = (message: Message) => {
         return (
-            <div key={message.userId + message.createdAt} className={`flex justify-between items-center gap-4 max-w-[70%] ${message.userId === user?.id ? "self-end" : "self-start"}`}>
+            <div key={message.id} className={`flex justify-between items-center gap-4 max-w-[70%] ${message.userId === user?.id ? "self-end" : "self-start"}`}>
                 <span
                     className={`${message.userId === user?.id ? "bg-blue-200" : "bg-red-200"} p-4 rounded`}>
                     {message.text}
@@ -55,9 +69,10 @@ export const Chat = ({ friendId }: { friendId: string }) => {
                 placeholder="Digite uma mensagem"
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
+                onPressEnter={() => handleSendMessage()}
                 addonAfter={
                     <SendOutlined
-                        onClick={() => socket.emit("send-message", { message: messageInput, userOneId: user?.id, friendId })}
+                        onClick={() => handleSendMessage()}
                         className="hover:text-blue-600 hover:cursor-pointer" />} />
         </Card>
     )
